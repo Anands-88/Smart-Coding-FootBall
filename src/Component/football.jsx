@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState} from "react";
 import { TextField,Box, Button,styled} from "@mui/material";
 import {Table,TableBody,TableContainer,
         TableHead,TableRow,Paper} from '@mui/material';
@@ -13,19 +13,30 @@ const Head = styled('div')(({ theme }) => ({
   fontSize:20
 }));
 
+// const StyledTableRow = styled(TableRow)(({ theme }) => ({
+//   [`&.${tableCellClasses.head}`]: {
+//     backgroundColor: theme.palette.common.white,
+//     color: theme.palette.common.black,
+//   },
+//   [`&.${tableCellClasses.body}`]: {
+//     fontSize: 15,
+//   },
+// }));
+
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
-    color: theme.palette.common.white,
+    backgroundColor: theme.palette.common.white,
+    color: theme.palette.common.black,
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 15,
+    
   },
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.action.hover,
+    backgroundColor:"orange",
   },
   // hide last border
   '&:last-child td, &:last-child th': {
@@ -40,7 +51,8 @@ export const Football = () =>
 
   const [result,setResult] = useState({
     player:"",
-    team:""
+    team:"",
+    result:""
   })
   
   const [inputValues,setInputValues] = useState({
@@ -52,32 +64,28 @@ export const Football = () =>
   })
 
   let teamsList = useRef([]);
-  let playersList = useRef([])
 
   function submitInputs(inputPara)
   {
     
   let {from,to,inputTeam,playerInput,rounds} = inputPara 
-  console.log(inputPara)
 
-    let {player,team} = football(from,to,inputTeam,playerInput,rounds) // input arguments to Functions
+    let {player,team,result} = football(from,to,inputTeam,playerInput,rounds) // input arguments to Functions
 
-    setResult({player,team})
-    // document.querySelector("#playerResult").textContent = player // Final result of player with highest Money
-    // document.querySelector("#teamResult").textContent = team // Final Result of Team with highest Money
+    setResult({player,team,result})
 
-    // document.querySelector("#display").textContent = JSON.stringify(displayData) // All Data
   }
 
   function football(rangeFrom,rangeTo,inputTeam,playerInput,round)
   {
-    let [teamCount,totalTeams] = [0,[]]; 
+    let [teamCount,totalTeams,teamRes] = [0,[],""]; 
 
-    while(teamCount != inputTeam)
+    while(teamCount !== inputTeam)
     {
       let teamName = {} // Adding TeamName from Capital Letters Collection
       teamName[capitalLetters[teamCount]] = {}; // with empty array for players with goal/amount
       let playerNames = {} 
+
       for(let num = 0; num < playerInput; num++)
         {
           playerNames[smallLetters[num]] = 0; // Adding players name from Small Letters collections
@@ -115,25 +123,38 @@ export const Football = () =>
     function highestMoney(singleTeam,teamName) // Teams array and team name
     {
       let teamSum = 0;
+      let playersList = [];
+
     
-        for(let player in singleTeam) // person is key and amount as value
-        {
-          teamsList.current.push(`${teamName}-${player}-${singleTeam[player]}`)
-
-            teamSum+= singleTeam[player] // Adding all players money for total team amount
-
-            if(singleTeam[player] > playerMax) // comparing each players amount to find player with highest money
-            {
-              playerMax = singleTeam[player] // player Money
-              playerName = player // Player name
-              playerFromTeam = teamName // Team of the player
-            }
-        }
-        
-      if(teamMax < teamSum) // max Team amount 
+      for(let player in singleTeam) // person is key and amount as value
       {
-        teamMax = teamSum // Total team sum - MAX
-        maxSum_TeamName = teamName // Name of the team with highest money
+        playersList.push(`${player}${singleTeam[player]}`)
+
+          teamSum+= singleTeam[player] // Adding all players money for total team amount
+
+          if(singleTeam[player] > playerMax) // comparing each players amount to find player with highest money
+          {
+            playerMax = singleTeam[player] // player Money
+            playerName = player // Player name
+            playerFromTeam = teamName // Team of the player
+          }
+      }
+
+      teamsList.current.push({teamName,playersList})
+
+      if(teamMax <= teamSum) // max Team amount 
+      {
+        if(teamMax < teamSum)
+        {
+          teamMax = teamSum // Total team sum - MAX
+          maxSum_TeamName = teamName // Name of the team with highest money
+          teamRes = teamName
+        }
+        else if(teamMax === teamSum)
+        {
+            teamRes = false
+        }
+       
       }
     }
     
@@ -143,21 +164,11 @@ export const Football = () =>
                 ${playerMax?`having Rs ${playerMax}`:". Money=0"}.`, 
       team: `${teamMax?"":"No"} Team ${maxSum_TeamName || ""} 
               has highest money${teamMax?`having Rs ${teamMax}`:". Money=0"}.`,
+      result:teamRes
     }
+
     return finalSentence
   }
-
-//   function createData(name, calories, fat, carbs, protein) {
-//   return { name, calories, fat, carbs, protein };
-// }
-
-// const rows = [
-//   createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-//   createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-//   createData('Eclair', 262, 16.0, 24, 6.0),
-//   createData('Cupcake', 305, 3.7, 67, 4.3),
-//   createData('Gingerbread', 356, 16.0, 49, 3.9),
-// ];
 
     let teamsArr = teamsList.current
 
@@ -194,31 +205,38 @@ export const Football = () =>
                 onClick={()=>submitInputs(inputValues)}
                 color="warning" variant="contained" >Submit</Button>
             </Box>
-            <TableContainer sx={{maxWidth:"75%"}} component={Paper}>
-              <Table sx={{ minWidth: 500 }} aria-label="customized table">
+            <TableContainer className="Table" sx={{maxWidth:"72%",marginLeft:"2%"}} component={Paper}>
+              <Table aria-label="customized table">
                 <TableHead>
                   <TableRow>
                     <StyledTableCell>Teams</StyledTableCell>
-                    <StyledTableCell align="center">Players</StyledTableCell>
+                    <StyledTableCell className="playerHead" align="right">Players</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {teamsArr.map((row) => (
-                    <StyledTableRow key={row}>
-                      <StyledTableCell component="th" scope="row">
-                        {row}
-                      </StyledTableCell>
+                  {teamsArr.map(({teamName,playersList},index) => {
+                    return <StyledTableRow key={index}>
+                          <StyledTableCell className="teamHeads" component="th" scope="row">
+                            {teamName}
+                          </StyledTableCell>
+                          {playersList.map((str,index)=>{
+                            let [name,...money] = str
+                             return <StyledTableCell key={index} align="center">
+                                    <h3>{name}</h3>
+                                    <h3> ₹ {money.join("")}</h3>
+                                </StyledTableCell>
+                          })}
                     </StyledTableRow>
-                  ))}
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
           </div>
           <Box component="div">
-              {/* <Typography gutterBottom variant="h1">{result.player}</Typography>
-              <Typography variant="h1">{result.team}</Typography> */}
+              <Head>{result.result?` Team ${result.result} Won`:"Its a Tie"}</Head>
               <Head>{result.player}</Head>
               <Head>{result.team}</Head>
+              
           </Box>
 
       </>
